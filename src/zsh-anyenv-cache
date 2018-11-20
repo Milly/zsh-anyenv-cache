@@ -1,0 +1,54 @@
+# vim :set ft=zsh:
+
+local cmd=$(whence -p anyenv)
+[[ -n $cmd ]] || return 1
+
+: ${ANYENV_ROOT:=${cmd%/*/*}}
+export ANYENV_ROOT
+
+local cache="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/anyenv"
+local envs=(anyenv "$ANYENV_ROOT"/envs/*(N-/:t))
+local exists=("$cache/autoload"/$envs(N-.:t))
+local env
+local -U upath
+
+if [[ -r $cache/exports && $#exists == $#envs ]]; then
+  # exists cache for all envs
+
+  # load exports with keep path order
+  upath=("${(@Oa)path}")
+  source "$cache/exports"
+  upath=("${(@Oa)path}")
+  path=("${(@Oa)upath}")
+
+  # prepend into fpath
+  fpath=("$cache/autoload" "$fpath[@]")
+
+  # set completions
+  for env in "$cache/autoload"/*(N-.:t); autoload -Uz $env
+  for env in "$cache/autoload"/_$envs(N-.:t); compctl -K $env ${env#_}
+
+else
+  # cache is outdated
+  [[ -e "$cache/autoload" ]] || mkdir -p "$cache/autoload"
+  local script="$("$cmd" init - zsh)" && {
+    print "Initialize anyenv cache..."
+
+    # eval script with keep path order
+    upath=("${(@Oa)path}")
+    eval "$script"
+    upath=("${(@Oa)path}")
+    path=("${(@Oa)upath}")
+
+    # create exports file
+    print "${(FM@)${(fp)script}:#export *}" >|"$cache/exports"
+
+    # create autoload files
+    for env in {,_}$envs; do
+      [[ ! -e "$cache/autoload/$env" ]] && typeset -f $env >/dev/null && {
+        print "Create autoload file: $env"
+        typeset -f $env >"$cache/autoload/$env"
+      }
+    done
+  }
+fi
