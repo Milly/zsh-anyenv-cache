@@ -1,8 +1,5 @@
 # vim:set ft=zsh:
 
-local cmd=$(whence -p anyenv)
-[[ -n $cmd ]] || return 1
-
 if [[ -z $ANYENV_ROOT ]]; then
   local roots=(
     ${XDG_DATA_HOME:-${HOME}/.local/share}/anyenv
@@ -12,6 +9,9 @@ if [[ -z $ANYENV_ROOT ]]; then
   ANYENV_ROOT=${roots[1]}
 fi
 export ANYENV_ROOT
+
+local cmd=${$(whence -p anyenv):-${ANYENV_ROOT}/bin/anyenv}
+[[ -x $cmd ]] || return 1
 
 local cache="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/anyenv"
 local envs=(anyenv "$ANYENV_ROOT"/envs/*(N-/:t))

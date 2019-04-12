@@ -10,20 +10,32 @@ if [[ -z $ANYENV_ROOT ]]; then
 fi
 export ANYENV_ROOT
 
-local cmd=$(whence -p anyenv)
-if [[ -z "$cmd" ]]; then
-  cmd="$ANYENV_ROOT/bin/anyenv"
-  if [[ ! -x "$cmd" ]]; then
-    local OK
-    read -q "OK?anyenv command not found, install it? [Y/n]"
+local cmd=${$(whence -p anyenv):-${ANYENV_ROOT}/bin/anyenv}
+if [[ ! -x "$cmd" ]]; then
+  local OK
+
+  if whence brew >/dev/null; then
+    read -q "OK?anyenv command not found, install it from Homebrew? [Y/n]"
     print
-    [[ $OK == [yY] ]] || return 126
-    mkdir -p "$ANYENV_ROOT"
-    git clone --depth 1 \
-      "${ANYENV_GIT_URL:-"https://github.com/anyenv/anyenv"}" \
-      "$ANYENV_ROOT" \
-      || return $?
+    if [[ $OK == [yY] ]]; then
+      brew install anyenv || return $?
+      rehash
+      cmd=$(whence -p anyenv)
+    fi
   fi
+
+  if [[ ! -x $cmd ]] && whence git >/dev/null; then
+    : ${ANYENV_GIT_URL:="https://github.com/anyenv/anyenv"}
+    read -q "OK?install it from '$ANYENV_GIT_URL'? [Y/n]"
+    print
+    if [[ $OK == [yY] ]]; then
+      mkdir -p "$ANYENV_ROOT"
+      git clone --depth 1 "${ANYENV_GIT_URL}" "$ANYENV_ROOT" || return $?
+      cmd=${ANYENV_ROOT}/bin/anyenv
+    fi
+  fi
+
+  [[ -x $cmd ]] || { echo "command not found: anyenv"; return 126 }
 fi
 
 unfunction anyenv
