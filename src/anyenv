@@ -1,11 +1,17 @@
 # vim:set ft=zsh:
 
-local cmd=$(whence -p anyenv)
+if [[ -z $ANYENV_ROOT ]]; then
+  local roots=(
+    ${XDG_DATA_HOME:-${HOME}/.local/share}/anyenv
+    ${HOME}/.anyenv
+  )
+  roots=( ${^${(@)roots}}(N-/) ${(@)roots} )
+  ANYENV_ROOT=${roots[1]}
+fi
+export ANYENV_ROOT
 
-if [[ -n "$cmd" ]]; then
-  : ${ANYENV_ROOT:=${cmd%/*/*}}
-else
-  : ${ANYENV_ROOT:=${${XDG_DATA_HOME:+$XDG_DATA_HOME/}:-$HOME/.}anyenv}
+local cmd=$(whence -p anyenv)
+if [[ -z "$cmd" ]]; then
   cmd="$ANYENV_ROOT/bin/anyenv"
   if [[ ! -x "$cmd" ]]; then
     local OK
@@ -13,11 +19,12 @@ else
     print
     [[ $OK == [yY] ]] || return 126
     mkdir -p "$ANYENV_ROOT"
-    git clone --depth 1 "${ANYENV_GIT_URL:-"https://github.com/riywo/anyenv"}" "$ANYENV_ROOT" \
+    git clone --depth 1 \
+      "${ANYENV_GIT_URL:-"https://github.com/anyenv/anyenv"}" \
+      "$ANYENV_ROOT" \
       || return $?
   fi
 fi
-export ANYENV_ROOT
 
 unfunction anyenv
 zsh-anyenv-cache

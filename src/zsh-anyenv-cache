@@ -3,7 +3,14 @@
 local cmd=$(whence -p anyenv)
 [[ -n $cmd ]] || return 1
 
-: ${ANYENV_ROOT:=${cmd%/*/*}}
+if [[ -z $ANYENV_ROOT ]]; then
+  local roots=(
+    ${XDG_DATA_HOME:-${HOME}/.local/share}/anyenv
+    ${HOME}/.anyenv
+  )
+  roots=( ${^${(@)roots}}(N-/) ${(@)roots} )
+  ANYENV_ROOT=${roots[1]}
+fi
 export ANYENV_ROOT
 
 local cache="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/anyenv"
