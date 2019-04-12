@@ -1,6 +1,6 @@
 # zsh-anyenv-cache
 
-Create autoload functions for *anyenv*, then improve speed your *.zshrc*
+Create autoload functions for [anyenv](https://github.com/anyenv/anyenv), then improve speed your *.zshrc*
 
 ## How to set up
 
