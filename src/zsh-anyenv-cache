@@ -15,7 +15,7 @@ local cmd=${$(whence -p anyenv):-${ANYENV_ROOT}/bin/anyenv}
 
 local cache="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/anyenv"
 local envs=(anyenv "$ANYENV_ROOT"/envs/*(N-/:t))
-local exists=("$cache/autoload"/$envs(N-.:t))
+local exists=("$cache/autoload"/[^_]*(N-.:t))
 local env
 local -U upath
 
@@ -33,7 +33,7 @@ if [[ -r $cache/exports && $#exists == $#envs ]]; then
 
   # set completions
   for env in "$cache/autoload"/*(N-.:t); autoload -Uz $env
-  for env in "$cache/autoload"/_$envs(N-.:t); compctl -K $env ${env#_}
+  for env in "$cache/autoload"/_${^${envs}}(N-.:t); compctl -K $env ${env#_}
 
 else
   # cache is outdated
