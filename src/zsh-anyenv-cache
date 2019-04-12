@@ -50,6 +50,12 @@ else
     # create exports file
     print "${(FM@)${(fp)script}:#export *}" >|"$cache/exports"
 
+    # remove autoload files
+    for env in "$cache/autoload"/{,_}${(@)exists:|envs}(N-.:t); do
+      echo "Remove autoload file: $env"
+      rm "$cache/autoload/$env"
+    done
+
     # create autoload files
     for env in {,_}$envs; do
       [[ ! -e "$cache/autoload/$env" ]] && typeset -f $env >/dev/null && {
