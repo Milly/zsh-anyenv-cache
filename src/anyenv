@@ -1,4 +1,4 @@
-# vim:set ft=zsh:
+#autoload
 
 if [[ -z $ANYENV_ROOT ]]; then
   local roots=(
